@@ -3,7 +3,6 @@
 const jQueryShim = require('./jQueryShim');
 
 /* jquery.signalR.core.js */
-/*global window:false */
 /*!
  * ASP.NET SignalR JavaScript Library v2.2.1
  * http://signalr.net/
@@ -15,7 +14,7 @@ const jQueryShim = require('./jQueryShim');
 
 /// <reference path="Scripts/jquery-1.6.4.js" />
 /// <reference path="jquery.signalR.version.js" />
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var resources = {
         nojQuery: "jQuery was not found. Please ensure jQuery is referenced before the SignalR client JavaScript file.",
@@ -52,8 +51,6 @@ const jQueryShim = require('./jQueryShim');
 
     var signalR,
         _connection,
-        _pageLoaded = (window.document.readyState === "complete"),
-        _pageWindow = $(window),
         _negotiateAbortText = "__Negotiate Aborted__",
         events = {
             onStart: "onStart",
@@ -162,23 +159,6 @@ const jQueryShim = require('./jQueryShim');
     signalR._ = {
         defaultContentType: "application/x-www-form-urlencoded; charset=UTF-8",
 
-        ieVersion: (function () {
-            var version,
-                matches;
-
-            if (window.navigator.appName === 'Microsoft Internet Explorer') {
-                // Check if the user agent has the pattern "MSIE (one or more numbers).(one or more numbers)";
-                matches = /MSIE ([0-9]+\.[0-9]+)/.exec(window.navigator.userAgent);
-
-                if (matches) {
-                    version = parseFloat(matches[1]);
-                }
-            }
-
-            // undefined value means not IE
-            return version;
-        })(),
-
         error: function (message, source, context) {
             var e = new Error(message);
             e.source = source;
@@ -203,15 +183,6 @@ const jQueryShim = require('./jQueryShim');
                 s = s.replace("{" + i + "}", arguments[i + 1]);
             }
             return s;
-        },
-
-        firefoxMajorVersion: function (userAgent) {
-            // Firefox user agents: http://useragentstring.com/pages/Firefox/
-            var matches = userAgent.match(/Firefox\/(\d+)/);
-            if (!matches || !matches.length || matches.length < 2) {
-                return 0;
-            }
-            return parseInt(matches[1], 10 /* radix */);
         },
 
         configurePingInterval: function (connection) {
@@ -252,15 +223,6 @@ const jQueryShim = require('./jQueryShim');
         }
     };
 
-    // .on() was added in version 1.7.0, .load() was removed in version 3.0.0 so we fallback to .load() if .on() does
-    // not exist to not break existing applications
-    if (typeof _pageWindow.on == "function") {
-        _pageWindow.on("load", function () { _pageLoaded = true; });
-    }
-    else {
-        _pageWindow.load(function () { _pageLoaded = true; });
-    }
-
     function validateTransport(requestedTransport, connection) {
         /// <summary>Validates the requested transport by cross checking it with the pre-defined signalR.transports</summary>
         /// <param name="requestedTransport" type="Object">The designated transports that the user has specified.</param>
@@ -285,10 +247,6 @@ const jQueryShim = require('./jQueryShim');
         } else if (!signalR.transports[requestedTransport] && requestedTransport !== "auto") {
             connection.log("Invalid transport: " + requestedTransport.toString() + ".");
             requestedTransport = null;
-        } else if (requestedTransport === "auto" && signalR._.ieVersion <= 8) {
-            // If we're doing an auto transport and we're IE8 then force longPolling, #1764
-            return ["longPolling"];
-
         }
 
         return requestedTransport;
@@ -379,31 +337,6 @@ const jQueryShim = require('./jQueryShim');
 
         json: JSON,
 
-        isCrossDomain: function (url, against) {
-            /// <summary>Checks if url is cross domain</summary>
-            /// <param name="url" type="String">The base URL</param>
-            /// <param name="against" type="Object">
-            ///     An optional argument to compare the URL against, if not specified it will be set to window.location.
-            ///     If specified it must contain a protocol and a host property.
-            /// </param>
-            var link;
-
-            url = $.trim(url);
-
-            against = against || window.location;
-
-            if (url.indexOf("http") !== 0) {
-                return false;
-            }
-
-            // Create an anchor tag.
-            link = window.document.createElement("a");
-            link.href = url;
-
-            // When checking for cross domain we have to special case port 80 because the window.location will remove the
-            return link.protocol + addDefaultPort(link.protocol, link.host) !== against.protocol + addDefaultPort(against.protocol, against.host);
-        },
-
         ajaxDataType: "text",
 
         contentType: "application/json; charset=UTF-8",
@@ -436,8 +369,7 @@ const jQueryShim = require('./jQueryShim');
                     jsonp: false
                 },
                 initialize,
-                deferred = connection._deferral || $.Deferred(), // Check to see if there is a pre-existing deferral that's being built on, if so we want to keep using it
-                parser = window.document.createElement("a");
+                deferred = connection._deferral || $.Deferred(); // Check to see if there is a pre-existing deferral that's being built on, if so we want to keep using it
 
             connection.lastError = null;
 
@@ -468,17 +400,6 @@ const jQueryShim = require('./jQueryShim');
 
             connection._.config = config;
 
-            // Check to see if start is being called prior to page load
-            // If waitForPageLoad is true we then want to re-direct function call to the window load event
-            if (!_pageLoaded && config.waitForPageLoad === true) {
-                connection._.deferredStartHandler = function () {
-                    connection.start(options, callback);
-                };
-                _pageWindow.bind("load", connection._.deferredStartHandler);
-
-                return deferred.promise();
-            }
-
             // If we're already connecting just return the same deferral as the original connection start
             if (connection.state === signalR.connectionState.connecting) {
                 return deferred.promise();
@@ -495,14 +416,8 @@ const jQueryShim = require('./jQueryShim');
             configureStopReconnectingTimeout(connection);
 
             // Resolve the full url
-            parser.href = connection.url;
-            if (!parser.protocol || parser.protocol === ":") {
-                connection.protocol = window.document.location.protocol;
-                connection.host = parser.host || window.document.location.host;
-            } else {
-                connection.protocol = parser.protocol;
-                connection.host = parser.host;
-            }
+            connection.protocol = (connection.url.match(/([a-z]+:)\/\//) || [])[1];
+            connection.host = (connection.url.match(/^[a-z]+:\/\/([^\/:]+)/) || [])[1];
 
             connection.baseUrl = connection.protocol + "//" + connection.host;
 
@@ -515,38 +430,6 @@ const jQueryShim = require('./jQueryShim');
             // as demonstrated by Issue #623.
             if (config.transport === "auto" && config.jsonp === true) {
                 config.transport = "longPolling";
-            }
-
-            // If the url is protocol relative, prepend the current windows protocol to the url.
-            if (connection.url.indexOf("//") === 0) {
-                connection.url = window.location.protocol + connection.url;
-                connection.log("Protocol relative URL detected, normalizing it to '" + connection.url + "'.");
-            }
-
-            if (this.isCrossDomain(connection.url)) {
-                connection.log("Auto detected cross domain url.");
-
-                if (config.transport === "auto") {
-                    // TODO: Support XDM with foreverFrame
-                    config.transport = ["webSockets", "serverSentEvents", "longPolling"];
-                }
-
-                if (typeof (config.withCredentials) === "undefined") {
-                    config.withCredentials = true;
-                }
-
-                // Determine if jsonp is the only choice for negotiation, ajaxSend and ajaxAbort.
-                // i.e. if the browser doesn't supports CORS
-                // If it is, ignore any preference to the contrary, and switch to jsonp.
-                if (!config.jsonp) {
-                    config.jsonp = !$.support.cors;
-
-                    if (config.jsonp) {
-                        connection.log("Using jsonp because this browser doesn't support CORS.");
-                    }
-                }
-
-                connection.contentType = signalR._.defaultContentType;
             }
 
             connection.withCredentials = config.withCredentials;
@@ -598,10 +481,6 @@ const jQueryShim = require('./jQueryShim');
 
                 try {
                     connection._.initHandler.start(transport, function () { // success
-                        // Firefox 11+ doesn't allow sync XHR withCredentials: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest#withCredentials
-                        var isFirefox11OrGreater = signalR._.firefoxMajorVersion(window.navigator.userAgent) >= 11,
-                            asyncAbort = !!connection.withCredentials && isFirefox11OrGreater;
-
                         connection.log("The start request succeeded. Transitioning to the connected state.");
 
                         if (supportsKeepAlive(connection)) {
@@ -624,25 +503,6 @@ const jQueryShim = require('./jQueryShim');
                         connection._.connectingMessageBuffer.drain();
 
                         $(connection).triggerHandler(events.onStart);
-
-                        // wire the stop handler for when the user leaves the page
-                        _pageWindow.bind("unload", function () {
-                            connection.log("Window unloading, stopping the connection.");
-
-                            connection.stop(asyncAbort);
-                        });
-
-                        if (isFirefox11OrGreater) {
-                            // Firefox does not fire cross-domain XHRs in the normal unload handler on tab close.
-                            // #2400
-                            _pageWindow.bind("beforeunload", function () {
-                                // If connection.stop() runs runs in beforeunload and fails, it will also fail
-                                // in unload unless connection.stop() runs after a timeout.
-                                setTimeout(function () {
-                                    connection.stop(asyncAbort);
-                                }, 0);
-                            });
-                        }
                     }, onFallback);
                 }
                 catch (error) {
@@ -885,29 +745,8 @@ const jQueryShim = require('./jQueryShim');
                 // Save deferral because this is always cleaned up
                 deferral = connection._deferral;
 
-            // Verify that we've bound a load event.
-            if (connection._.deferredStartHandler) {
-                // Unbind the event.
-                _pageWindow.unbind("load", connection._.deferredStartHandler);
-            }
-
             // Always clean up private non-timeout based state.
             delete connection._.config;
-            delete connection._.deferredStartHandler;
-
-            // This needs to be checked despite the connection state because a connection start can be deferred until page load.
-            // If we've deferred the start due to a page load we need to unbind the "onLoad" -> start event.
-            if (!_pageLoaded && (!connection._.config || connection._.config.waitForPageLoad === true)) {
-                connection.log("Stopping connection prior to negotiate.");
-
-                // If we have a deferral we should reject it
-                if (deferral) {
-                    deferral.reject(signalR._.error(resources.stoppedWhileLoading));
-                }
-
-                // Short-circuit because the start has not been fully started.
-                return;
-            }
 
             if (connection.state === signalR.connectionState.disconnected) {
                 return;
@@ -984,7 +823,7 @@ const jQueryShim = require('./jQueryShim');
 
     $.connection = $.signalR = signalR;
 
-}(jQueryShim, window));
+}(jQueryShim));
 /* jquery.signalR.transports.common.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -1666,11 +1505,6 @@ const jQueryShim = require('./jQueryShim');
 
         initHandler: function (connection) {
             return new InitHandler(connection);
-        },
-
-        foreverFrame: {
-            count: 0,
-            connections: {}
         }
     };
 
@@ -1831,436 +1665,6 @@ const jQueryShim = require('./jQueryShim');
     };
 
 }(jQueryShim));
-/* jquery.signalR.transports.serverSentEvents.js */
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-
-/// <reference path="jquery.signalR.transports.common.js" />
-
-(function ($, undefined) {
-
-    var signalR = $.signalR,
-        events = $.signalR.events,
-        changeState = $.signalR.changeState,
-        transportLogic = signalR.transports._logic,
-        clearReconnectAttemptTimeout = function (connection) {
-            clearTimeout(connection._.reconnectAttemptTimeoutHandle);
-            delete connection._.reconnectAttemptTimeoutHandle;
-        };
-
-    signalR.transports.serverSentEvents = {
-        name: "serverSentEvents",
-
-        supportsKeepAlive: function () {
-            return true;
-        },
-
-        timeOut: 3000,
-
-        start: function (connection, onSuccess, onFailed) {
-            var that = this,
-                opened = false,
-                $connection = $(connection),
-                reconnecting = !onSuccess,
-                url;
-
-            if (connection.eventSource) {
-                connection.log("The connection already has an event source. Stopping it.");
-                connection.stop();
-            }
-
-            if (!EventSource) {
-                if (onFailed) {
-                    connection.log("This browser doesn't support SSE.");
-                    onFailed();
-                }
-                return;
-            }
-
-            url = transportLogic.getUrl(connection, this.name, reconnecting);
-
-            try {
-                connection.log("Attempting to connect to SSE endpoint '" + url + "'.");
-                connection.eventSource = new EventSource(url, { withCredentials: connection.withCredentials });
-            }
-            catch (e) {
-                connection.log("EventSource failed trying to connect with error " + e.Message + ".");
-                if (onFailed) {
-                    // The connection failed, call the failed callback
-                    onFailed();
-                } else {
-                    $connection.triggerHandler(events.onError, [signalR._.transportError(signalR.resources.eventSourceFailedToConnect, connection.transport, e)]);
-                    if (reconnecting) {
-                        // If we were reconnecting, rather than doing initial connect, then try reconnect again
-                        that.reconnect(connection);
-                    }
-                }
-                return;
-            }
-
-            if (reconnecting) {
-                connection._.reconnectAttemptTimeoutHandle = setTimeout(function () {
-                    if (opened === false) {
-                        // If we're reconnecting and the event source is attempting to connect,
-                        // don't keep retrying. This causes duplicate connections to spawn.
-                        if (connection.eventSource.readyState !== EventSource.OPEN) {
-                            // If we were reconnecting, rather than doing initial connect, then try reconnect again
-                            that.reconnect(connection);
-                        }
-                    }
-                },
-                that.timeOut);
-            }
-
-            connection.eventSource.addEventListener("open", function (e) {
-                connection.log("EventSource connected.");
-
-                clearReconnectAttemptTimeout(connection);
-                transportLogic.clearReconnectTimeout(connection);
-
-                if (opened === false) {
-                    opened = true;
-
-                    if (changeState(connection,
-                                         signalR.connectionState.reconnecting,
-                                         signalR.connectionState.connected) === true) {
-                        $connection.triggerHandler(events.onReconnect);
-                    }
-                }
-            }, false);
-
-            connection.eventSource.addEventListener("message", function (e) {
-                var res;
-
-                // process messages
-                if (e.data === "initialized") {
-                    return;
-                }
-
-                try {
-                    res = connection._parseResponse(e.data);
-                }
-                catch (error) {
-                    transportLogic.handleParseFailure(connection, e.data, error, onFailed, e);
-                    return;
-                }
-
-                transportLogic.processMessages(connection, res, onSuccess);
-            }, false);
-
-            connection.eventSource.addEventListener("error", function (e) {
-                var error = signalR._.transportError(
-                    signalR.resources.eventSourceError,
-                    connection.transport,
-                    e);
-
-                // Only handle an error if the error is from the current Event Source.
-                // Sometimes on disconnect the server will push down an error event
-                // to an expired Event Source.
-                if (this !== connection.eventSource) {
-                    return;
-                }
-
-                if (onFailed && onFailed(error)) {
-                    return;
-                }
-
-                connection.log("EventSource readyState: " + connection.eventSource.readyState + ".");
-
-                if (e.eventPhase === EventSource.CLOSED) {
-                    // We don't use the EventSource's native reconnect function as it
-                    // doesn't allow us to change the URL when reconnecting. We need
-                    // to change the URL to not include the /connect suffix, and pass
-                    // the last message id we received.
-                    connection.log("EventSource reconnecting due to the server connection ending.");
-                    that.reconnect(connection);
-                } else {
-                    // connection error
-                    connection.log("EventSource error.");
-                    $connection.triggerHandler(events.onError, [error]);
-                }
-            }, false);
-        },
-
-        reconnect: function (connection) {
-            transportLogic.reconnect(connection, this.name);
-        },
-
-        lostConnection: function (connection) {
-            this.reconnect(connection);
-        },
-
-        send: function (connection, data) {
-            transportLogic.ajaxSend(connection, data);
-        },
-
-        stop: function (connection) {
-            // Don't trigger a reconnect after stopping
-            clearReconnectAttemptTimeout(connection);
-            transportLogic.clearReconnectTimeout(connection);
-
-            if (connection && connection.eventSource) {
-                connection.log("EventSource calling close().");
-                connection.eventSource.close();
-                connection.eventSource = null;
-                delete connection.eventSource;
-            }
-        },
-
-        abort: function (connection, async) {
-            transportLogic.ajaxAbort(connection, async);
-        }
-    };
-
-}(jQueryShim));
-/* jquery.signalR.transports.foreverFrame.js */
-// Copyright (c) .NET Foundation. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
-
-
-/// <reference path="jquery.signalR.transports.common.js" />
-
-(function ($, window, undefined) {
-
-    var signalR = $.signalR,
-        events = $.signalR.events,
-        changeState = $.signalR.changeState,
-        transportLogic = signalR.transports._logic,
-        createFrame = function () {
-            var frame = window.document.createElement("iframe");
-            frame.setAttribute("style", "position:absolute;top:0;left:0;width:0;height:0;visibility:hidden;");
-            return frame;
-        },
-        // Used to prevent infinite loading icon spins in older versions of ie
-        // We build this object inside a closure so we don't pollute the rest of
-        // the foreverFrame transport with unnecessary functions/utilities.
-        loadPreventer = (function () {
-            var loadingFixIntervalId = null,
-                loadingFixInterval = 1000,
-                attachedTo = 0;
-
-            return {
-                prevent: function () {
-                    // Prevent additional iframe removal procedures from newer browsers
-                    if (signalR._.ieVersion <= 8) {
-                        // We only ever want to set the interval one time, so on the first attachedTo
-                        if (attachedTo === 0) {
-                            // Create and destroy iframe every 3 seconds to prevent loading icon, super hacky
-                            loadingFixIntervalId = setInterval(function () {
-                                var tempFrame = createFrame();
-
-                                window.document.body.appendChild(tempFrame);
-                                window.document.body.removeChild(tempFrame);
-
-                                tempFrame = null;
-                            }, loadingFixInterval);
-                        }
-
-                        attachedTo++;
-                    }
-                },
-                cancel: function () {
-                    // Only clear the interval if there's only one more object that the loadPreventer is attachedTo
-                    if (attachedTo === 1) {
-                        clearInterval(loadingFixIntervalId);
-                    }
-
-                    if (attachedTo > 0) {
-                        attachedTo--;
-                    }
-                }
-            };
-        })();
-
-    signalR.transports.foreverFrame = {
-        name: "foreverFrame",
-
-        supportsKeepAlive: function () {
-            return true;
-        },
-
-        // Added as a value here so we can create tests to verify functionality
-        iframeClearThreshold: 50,
-
-        start: function (connection, onSuccess, onFailed) {
-            var that = this,
-                frameId = (transportLogic.foreverFrame.count += 1),
-                url,
-                frame = createFrame(),
-                frameLoadHandler = function () {
-                    connection.log("Forever frame iframe finished loading and is no longer receiving messages.");
-                    if (!onFailed || !onFailed()) {
-                        that.reconnect(connection);
-                    }
-                };
-
-            if (EventSource) {
-                // If the browser supports SSE, don't use Forever Frame
-                if (onFailed) {
-                    connection.log("Forever Frame is not supported by SignalR on browsers with SSE support.");
-                    onFailed();
-                }
-                return;
-            }
-
-            frame.setAttribute("data-signalr-connection-id", connection.id);
-
-            // Start preventing loading icon
-            // This will only perform work if the loadPreventer is not attached to another connection.
-            loadPreventer.prevent();
-
-            // Build the url
-            url = transportLogic.getUrl(connection, this.name);
-            url += "&frameId=" + frameId;
-
-            // add frame to the document prior to setting URL to avoid caching issues.
-            window.document.documentElement.appendChild(frame);
-
-            connection.log("Binding to iframe's load event.");
-
-            if (frame.addEventListener) {
-                frame.addEventListener("load", frameLoadHandler, false);
-            } else if (frame.attachEvent) {
-                frame.attachEvent("onload", frameLoadHandler);
-            }
-
-            frame.src = url;
-            transportLogic.foreverFrame.connections[frameId] = connection;
-
-            connection.frame = frame;
-            connection.frameId = frameId;
-
-            if (onSuccess) {
-                connection.onSuccess = function () {
-                    connection.log("Iframe transport started.");
-                    onSuccess();
-                };
-            }
-        },
-
-        reconnect: function (connection) {
-            var that = this;
-
-            // Need to verify connection state and verify before the setTimeout occurs because an application sleep could occur during the setTimeout duration.
-            if (transportLogic.isConnectedOrReconnecting(connection) && transportLogic.verifyLastActive(connection)) {
-                setTimeout(function () {
-                    // Verify that we're ok to reconnect.
-                    if (!transportLogic.verifyLastActive(connection)) {
-                        return;
-                    }
-
-                    if (connection.frame && transportLogic.ensureReconnectingState(connection)) {
-                        var frame = connection.frame,
-                            src = transportLogic.getUrl(connection, that.name, true) + "&frameId=" + connection.frameId;
-                        connection.log("Updating iframe src to '" + src + "'.");
-                        frame.src = src;
-                    }
-                }, connection.reconnectDelay);
-            }
-        },
-
-        lostConnection: function (connection) {
-            this.reconnect(connection);
-        },
-
-        send: function (connection, data) {
-            transportLogic.ajaxSend(connection, data);
-        },
-
-        receive: function (connection, data) {
-            var cw,
-                body,
-                response;
-
-            if (connection.json !== connection._originalJson) {
-                // If there's a custom JSON parser configured then serialize the object
-                // using the original (browser) JSON parser and then deserialize it using
-                // the custom parser (connection._parseResponse does that). This is so we
-                // can easily send the response from the server as "raw" JSON but still
-                // support custom JSON deserialization in the browser.
-                data = connection._originalJson.stringify(data);
-            }
-
-            response = connection._parseResponse(data);
-
-            transportLogic.processMessages(connection, response, connection.onSuccess);
-
-            // Protect against connection stopping from a callback trigger within the processMessages above.
-            if (connection.state === $.signalR.connectionState.connected) {
-                // Delete the script & div elements
-                connection.frameMessageCount = (connection.frameMessageCount || 0) + 1;
-                if (connection.frameMessageCount > signalR.transports.foreverFrame.iframeClearThreshold) {
-                    connection.frameMessageCount = 0;
-                    cw = connection.frame.contentWindow || connection.frame.contentDocument;
-                    if (cw && cw.document && cw.document.body) {
-                        body = cw.document.body;
-
-                        // Remove all the child elements from the iframe's body to conserver memory
-                        while (body.firstChild) {
-                            body.removeChild(body.firstChild);
-                        }
-                    }
-                }
-            }
-        },
-
-        stop: function (connection) {
-            var cw = null;
-
-            // Stop attempting to prevent loading icon
-            loadPreventer.cancel();
-
-            if (connection.frame) {
-                if (connection.frame.stop) {
-                    connection.frame.stop();
-                } else {
-                    try {
-                        cw = connection.frame.contentWindow || connection.frame.contentDocument;
-                        if (cw.document && cw.document.execCommand) {
-                            cw.document.execCommand("Stop");
-                        }
-                    }
-                    catch (e) {
-                        connection.log("Error occurred when stopping foreverFrame transport. Message = " + e.message + ".");
-                    }
-                }
-
-                // Ensure the iframe is where we left it
-                if (connection.frame.parentNode === window.document.body) {
-                    window.document.body.removeChild(connection.frame);
-                }
-
-                delete transportLogic.foreverFrame.connections[connection.frameId];
-                connection.frame = null;
-                connection.frameId = null;
-                delete connection.frame;
-                delete connection.frameId;
-                delete connection.onSuccess;
-                delete connection.frameMessageCount;
-                connection.log("Stopping forever frame.");
-            }
-        },
-
-        abort: function (connection, async) {
-            transportLogic.ajaxAbort(connection, async);
-        },
-
-        getConnection: function (id) {
-            return transportLogic.foreverFrame.connections[id];
-        },
-
-        started: function (connection) {
-            if (changeState(connection,
-                signalR.connectionState.reconnecting,
-                signalR.connectionState.connected) === true) {
-
-                $(connection).triggerHandler(events.onReconnect);
-            }
-        }
-    };
-
-}(jQueryShim, window));
 /* jquery.signalR.transports.longPolling.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
