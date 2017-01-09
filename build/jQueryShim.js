@@ -21,7 +21,7 @@ var jqueryFunction = function jqueryFunction(subject) {
   return {
     0: subject,
 
-    unbind: function unbind(event, handler) {
+    unbind(event, handler) {
       var handlers = events[event] || [];
 
       if (handler) {
@@ -32,12 +32,12 @@ var jqueryFunction = function jqueryFunction(subject) {
       events[event] = handlers;
       subject.events = events;
     },
-    bind: function bind(event, handler) {
+    bind(event, handler) {
       var current = events[event] || [];
       events[event] = current.concat(handler);
       subject.events = events;
     },
-    triggerHandler: function triggerHandler(event, args) {
+    triggerHandler(event, args) {
       var _this = this;
 
       var handlers = events[event] || [];
@@ -73,7 +73,7 @@ var ajax = function ajax(options) {
   request.open(options.type, options.url);
   request.setRequestHeader('content-type', options.contentType);
 
-  request.send(options.data.data && 'data=' + options.data.data);
+  request.send(options.data.data && `data=${ options.data.data }`);
 
   return {
     abort: function abort(reason) {
