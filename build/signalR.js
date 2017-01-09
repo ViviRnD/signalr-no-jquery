@@ -81,14 +81,14 @@ var jQueryShim = require('./jQueryShim');
             return;
         }
         var m;
-        if (typeof window.console === "undefined") {
+        if (typeof console === "undefined") {
             return;
         }
         m = "[" + new Date().toTimeString() + "] SignalR: " + msg;
-        if (window.console.debug) {
-            window.console.debug(m);
-        } else if (window.console.log) {
-            window.console.log(m);
+        if (console.debug) {
+            console.debug(m);
+        } else if (console.log) {
+            console.log(m);
         }
     },
         changeState = function changeState(connection, expectedState, newState) {
@@ -125,7 +125,7 @@ var jQueryShim = require('./jQueryShim');
 
                 // Guard against state changing in a previous user defined even handler
                 if (connection.state === _signalR.connectionState.reconnecting) {
-                    stopReconnectingTimeout = window.setTimeout(function () {
+                    stopReconnectingTimeout = setTimeout(function () {
                         onReconnectTimeout(connection);
                     }, connection.disconnectTimeout);
                 }
@@ -134,7 +134,7 @@ var jQueryShim = require('./jQueryShim');
             connection.stateChanged(function (data) {
                 if (data.oldState === _signalR.connectionState.reconnecting) {
                     // Clear the pending reconnect timeout check
-                    window.clearTimeout(stopReconnectingTimeout);
+                    clearTimeout(stopReconnectingTimeout);
                 }
             });
 
@@ -169,7 +169,7 @@ var jQueryShim = require('./jQueryShim');
                 matches = /MSIE ([0-9]+\.[0-9]+)/.exec(window.navigator.userAgent);
 
                 if (matches) {
-                    version = window.parseFloat(matches[1]);
+                    version = parseFloat(matches[1]);
                 }
             }
 
@@ -219,7 +219,7 @@ var jQueryShim = require('./jQueryShim');
             };
 
             if (config && !connection._.pingIntervalId && config.pingInterval) {
-                connection._.pingIntervalId = window.setInterval(function () {
+                connection._.pingIntervalId = setInterval(function () {
                     _signalR.transports._logic.pingServer(connection).fail(onFail);
                 }, config.pingInterval);
             }
@@ -375,9 +375,9 @@ var jQueryShim = require('./jQueryShim');
             }
         },
 
-        _originalJson: window.JSON,
+        _originalJson: JSON,
 
-        json: window.JSON,
+        json: JSON,
 
         isCrossDomain: function isCrossDomain(url, against) {
             /// <summary>Checks if url is cross domain</summary>
@@ -636,7 +636,7 @@ var jQueryShim = require('./jQueryShim');
                             _pageWindow.bind("beforeunload", function () {
                                 // If connection.stop() runs runs in beforeunload and fails, it will also fail
                                 // in unload unless connection.stop() runs after a timeout.
-                                window.setTimeout(function () {
+                                setTimeout(function () {
                                     connection.stop(asyncAbort);
                                 }, 0);
                             });
@@ -914,8 +914,8 @@ var jQueryShim = require('./jQueryShim');
             connection.log("Stopping connection.");
 
             // Clear this no matter what
-            window.clearTimeout(connection._.beatHandle);
-            window.clearInterval(connection._.pingIntervalId);
+            clearTimeout(connection._.beatHandle);
+            clearInterval(connection._.pingIntervalId);
 
             if (connection.transport) {
                 connection.transport.stop(connection);
@@ -986,10 +986,9 @@ var jQueryShim = require('./jQueryShim');
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-/*global window:false */
 /// <reference path="jquery.signalR.core.js" />
 
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var signalR = $.signalR,
         events = $.signalR.events,
@@ -1006,7 +1005,7 @@ var jQueryShim = require('./jQueryShim');
 
         // Ensure that we successfully marked active before continuing the heartbeat.
         if (transportLogic.markActive(connection)) {
-            connection._.beatHandle = window.setTimeout(function () {
+            connection._.beatHandle = setTimeout(function () {
                 beat(connection);
             }, connection._.beatInterval);
         }
@@ -1086,7 +1085,7 @@ var jQueryShim = require('./jQueryShim');
                 return !that.startCompleted || that.connectionStopped;
             });
 
-            that.transportTimeoutHandle = window.setTimeout(function () {
+            that.transportTimeoutHandle = setTimeout(function () {
                 if (!failCalled) {
                     failCalled = true;
                     connection.log(transport.name + " transport timed out when trying to connect.");
@@ -1097,7 +1096,7 @@ var jQueryShim = require('./jQueryShim');
 
         stop: function stop() {
             this.connectionStopped = true;
-            window.clearTimeout(this.transportTimeoutHandle);
+            clearTimeout(this.transportTimeoutHandle);
             signalR.transports._logic.tryAbortStartRequest(this.connection);
         },
 
@@ -1115,7 +1114,7 @@ var jQueryShim = require('./jQueryShim');
             }
 
             that.startRequested = true;
-            window.clearTimeout(that.transportTimeoutHandle);
+            clearTimeout(that.transportTimeoutHandle);
 
             connection.log(transport.name + " transport connected. Initiating start request.");
             signalR.transports._logic.ajaxStart(connection, function () {
@@ -1133,7 +1132,7 @@ var jQueryShim = require('./jQueryShim');
                 return;
             }
 
-            window.clearTimeout(this.transportTimeoutHandle);
+            clearTimeout(this.transportTimeoutHandle);
 
             if (!this.startRequested) {
                 transport.stop(connection);
@@ -1229,11 +1228,11 @@ var jQueryShim = require('./jQueryShim');
             preparedUrl = transportLogic.addQs(preparedUrl, connection.qs);
 
             if (connection.token) {
-                preparedUrl += "&connectionToken=" + window.encodeURIComponent(connection.token);
+                preparedUrl += "&connectionToken=" + encodeURIComponent(connection.token);
             }
 
             if (connection.data) {
-                preparedUrl += "&connectionData=" + window.encodeURIComponent(connection.data);
+                preparedUrl += "&connectionData=" + encodeURIComponent(connection.data);
             }
 
             return preparedUrl;
@@ -1272,7 +1271,7 @@ var jQueryShim = require('./jQueryShim');
                 qs = "transport=" + transport;
 
             if (!ajaxPost && connection.groupsToken) {
-                qs += "&groupsToken=" + window.encodeURIComponent(connection.groupsToken);
+                qs += "&groupsToken=" + encodeURIComponent(connection.groupsToken);
             }
 
             if (!reconnecting) {
@@ -1286,7 +1285,7 @@ var jQueryShim = require('./jQueryShim');
                 }
 
                 if (!ajaxPost && connection.messageId) {
-                    qs += "&messageId=" + window.encodeURIComponent(connection.messageId);
+                    qs += "&messageId=" + encodeURIComponent(connection.messageId);
                 }
             }
             url += "?" + qs;
@@ -1552,7 +1551,7 @@ var jQueryShim = require('./jQueryShim');
 
         clearReconnectTimeout: function clearReconnectTimeout(connection) {
             if (connection && connection._.reconnectTimeout) {
-                window.clearTimeout(connection._.reconnectTimeout);
+                clearTimeout(connection._.reconnectTimeout);
                 delete connection._.reconnectTimeout;
             }
         },
@@ -1580,7 +1579,7 @@ var jQueryShim = require('./jQueryShim');
                     return;
                 }
 
-                connection._.reconnectTimeout = window.setTimeout(function () {
+                connection._.reconnectTimeout = setTimeout(function () {
                     if (!transportLogic.verifyLastActive(connection)) {
                         return;
                     }
@@ -1616,16 +1615,15 @@ var jQueryShim = require('./jQueryShim');
             connections: {}
         }
     };
-})(jQueryShim, window);
+})(jQueryShim);
 /* jquery.signalR.transports.webSockets.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 
-/*global window:false */
 /// <reference path="jquery.signalR.transports.common.js" />
 
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var signalR = $.signalR,
         events = $.signalR.events,
@@ -1656,7 +1654,7 @@ var jQueryShim = require('./jQueryShim');
                 reconnecting = !onSuccess,
                 $connection = $(connection);
 
-            if (!window.WebSocket) {
+            if (!WebSocket) {
                 onFailed();
                 return;
             }
@@ -1671,7 +1669,7 @@ var jQueryShim = require('./jQueryShim');
                 url += transportLogic.getUrl(connection, this.name, reconnecting);
 
                 connection.log("Connecting to websocket endpoint '" + url + "'.");
-                connection.socket = new window.WebSocket(url);
+                connection.socket = new WebSocket(url);
 
                 connection.socket.onopen = function () {
                     opened = true;
@@ -1759,23 +1757,22 @@ var jQueryShim = require('./jQueryShim');
             transportLogic.ajaxAbort(connection, async);
         }
     };
-})(jQueryShim, window);
+})(jQueryShim);
 /* jquery.signalR.transports.serverSentEvents.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 
-/*global window:false */
 /// <reference path="jquery.signalR.transports.common.js" />
 
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var signalR = $.signalR,
         events = $.signalR.events,
         changeState = $.signalR.changeState,
         transportLogic = signalR.transports._logic,
         clearReconnectAttemptTimeout = function clearReconnectAttemptTimeout(connection) {
-        window.clearTimeout(connection._.reconnectAttemptTimeoutHandle);
+        clearTimeout(connection._.reconnectAttemptTimeoutHandle);
         delete connection._.reconnectAttemptTimeoutHandle;
     };
 
@@ -1800,7 +1797,7 @@ var jQueryShim = require('./jQueryShim');
                 connection.stop();
             }
 
-            if (!window.EventSource) {
+            if (!EventSource) {
                 if (onFailed) {
                     connection.log("This browser doesn't support SSE.");
                     onFailed();
@@ -1812,7 +1809,7 @@ var jQueryShim = require('./jQueryShim');
 
             try {
                 connection.log("Attempting to connect to SSE endpoint '" + url + "'.");
-                connection.eventSource = new window.EventSource(url, { withCredentials: connection.withCredentials });
+                connection.eventSource = new EventSource(url, { withCredentials: connection.withCredentials });
             } catch (e) {
                 connection.log("EventSource failed trying to connect with error " + e.Message + ".");
                 if (onFailed) {
@@ -1829,11 +1826,11 @@ var jQueryShim = require('./jQueryShim');
             }
 
             if (reconnecting) {
-                connection._.reconnectAttemptTimeoutHandle = window.setTimeout(function () {
+                connection._.reconnectAttemptTimeoutHandle = setTimeout(function () {
                     if (opened === false) {
                         // If we're reconnecting and the event source is attempting to connect,
                         // don't keep retrying. This causes duplicate connections to spawn.
-                        if (connection.eventSource.readyState !== window.EventSource.OPEN) {
+                        if (connection.eventSource.readyState !== EventSource.OPEN) {
                             // If we were reconnecting, rather than doing initial connect, then try reconnect again
                             that.reconnect(connection);
                         }
@@ -1890,7 +1887,7 @@ var jQueryShim = require('./jQueryShim');
 
                 connection.log("EventSource readyState: " + connection.eventSource.readyState + ".");
 
-                if (e.eventPhase === window.EventSource.CLOSED) {
+                if (e.eventPhase === EventSource.CLOSED) {
                     // We don't use the EventSource's native reconnect function as it
                     // doesn't allow us to change the URL when reconnecting. We need
                     // to change the URL to not include the /connect suffix, and pass
@@ -1934,13 +1931,12 @@ var jQueryShim = require('./jQueryShim');
             transportLogic.ajaxAbort(connection, async);
         }
     };
-})(jQueryShim, window);
+})(jQueryShim);
 /* jquery.signalR.transports.foreverFrame.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 
-/*global window:false */
 /// <reference path="jquery.signalR.transports.common.js" />
 
 (function ($, window, undefined) {
@@ -1970,7 +1966,7 @@ var jQueryShim = require('./jQueryShim');
                     // We only ever want to set the interval one time, so on the first attachedTo
                     if (attachedTo === 0) {
                         // Create and destroy iframe every 3 seconds to prevent loading icon, super hacky
-                        loadingFixIntervalId = window.setInterval(function () {
+                        loadingFixIntervalId = setInterval(function () {
                             var tempFrame = createFrame();
 
                             window.document.body.appendChild(tempFrame);
@@ -1986,7 +1982,7 @@ var jQueryShim = require('./jQueryShim');
             cancel: function cancel() {
                 // Only clear the interval if there's only one more object that the loadPreventer is attachedTo
                 if (attachedTo === 1) {
-                    window.clearInterval(loadingFixIntervalId);
+                    clearInterval(loadingFixIntervalId);
                 }
 
                 if (attachedTo > 0) {
@@ -2018,7 +2014,7 @@ var jQueryShim = require('./jQueryShim');
                 }
             };
 
-            if (window.EventSource) {
+            if (EventSource) {
                 // If the browser supports SSE, don't use Forever Frame
                 if (onFailed) {
                     connection.log("Forever Frame is not supported by SignalR on browsers with SSE support.");
@@ -2067,7 +2063,7 @@ var jQueryShim = require('./jQueryShim');
 
             // Need to verify connection state and verify before the setTimeout occurs because an application sleep could occur during the setTimeout duration.
             if (transportLogic.isConnectedOrReconnecting(connection) && transportLogic.verifyLastActive(connection)) {
-                window.setTimeout(function () {
+                setTimeout(function () {
                     // Verify that we're ok to reconnect.
                     if (!transportLogic.verifyLastActive(connection)) {
                         return;
@@ -2183,10 +2179,9 @@ var jQueryShim = require('./jQueryShim');
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 
-/*global window:false */
 /// <reference path="jquery.signalR.transports.common.js" />
 
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var signalR = $.signalR,
         events = $.signalR.events,
@@ -2229,7 +2224,7 @@ var jQueryShim = require('./jQueryShim');
                 privateData = connection._,
                 reconnectErrors = 0,
                 fireReconnected = function fireReconnected(instance) {
-                window.clearTimeout(privateData.reconnectTimeoutId);
+                clearTimeout(privateData.reconnectTimeoutId);
                 privateData.reconnectTimeoutId = null;
 
                 if (changeState(instance, signalR.connectionState.reconnecting, signalR.connectionState.connected) === true) {
@@ -2251,7 +2246,7 @@ var jQueryShim = require('./jQueryShim');
 
             privateData.reconnectTimeoutId = null;
 
-            privateData.pollTimeoutId = window.setTimeout(function () {
+            privateData.pollTimeoutId = setTimeout(function () {
                 (function poll(instance, raiseReconnect) {
                     var messageId = instance.messageId,
                         connect = messageId === null,
@@ -2335,7 +2330,7 @@ var jQueryShim = require('./jQueryShim');
 
                             // We never want to pass a raiseReconnect flag after a successful poll.  This is handled via the error function
                             if (delay > 0) {
-                                privateData.pollTimeoutId = window.setTimeout(function () {
+                                privateData.pollTimeoutId = setTimeout(function () {
                                     poll(instance, shouldReconnect);
                                 }, delay);
                             } else {
@@ -2348,7 +2343,7 @@ var jQueryShim = require('./jQueryShim');
 
                             // Stop trying to trigger reconnect, connection is in an error state
                             // If we're not in the reconnect state this will noop
-                            window.clearTimeout(privateData.reconnectTimeoutId);
+                            clearTimeout(privateData.reconnectTimeoutId);
                             privateData.reconnectTimeoutId = null;
 
                             if (textStatus === "abort") {
@@ -2382,7 +2377,7 @@ var jQueryShim = require('./jQueryShim');
                                 }
 
                                 // Call poll with the raiseReconnect flag as true after the reconnect delay
-                                privateData.pollTimeoutId = window.setTimeout(function () {
+                                privateData.pollTimeoutId = setTimeout(function () {
                                     poll(instance, true);
                                 }, that.reconnectDelay);
                             }
@@ -2396,7 +2391,7 @@ var jQueryShim = require('./jQueryShim');
                         // triggering reconnected.  This depends on the "error" handler of Poll to cancel this
                         // timeout if it triggers before the Reconnected event fires.
                         // The Math.min at the end is to ensure that the reconnect timeout does not overflow.
-                        privateData.reconnectTimeoutId = window.setTimeout(function () {
+                        privateData.reconnectTimeoutId = setTimeout(function () {
                             fireReconnected(instance);
                         }, Math.min(1000 * (Math.pow(2, reconnectErrors) - 1), maxFireReconnectedTimeout));
                     }
@@ -2418,8 +2413,8 @@ var jQueryShim = require('./jQueryShim');
             /// <summary>Stops the long polling connection</summary>
             /// <param name="connection" type="signalR">The SignalR connection to stop</param>
 
-            window.clearTimeout(connection._.pollTimeoutId);
-            window.clearTimeout(connection._.reconnectTimeoutId);
+            clearTimeout(connection._.pollTimeoutId);
+            clearTimeout(connection._.reconnectTimeoutId);
 
             delete connection._.pollTimeoutId;
             delete connection._.reconnectTimeoutId;
@@ -2435,15 +2430,14 @@ var jQueryShim = require('./jQueryShim');
             transportLogic.ajaxAbort(connection, async);
         }
     };
-})(jQueryShim, window);
+})(jQueryShim);
 /* jquery.signalR.hubs.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-/*global window:false */
 /// <reference path="jquery.signalR.core.js" />
 
-(function ($, window, undefined) {
+(function ($, undefined) {
 
     var eventNamespace = ".hubProxy",
         signalR = $.signalR;
@@ -2855,13 +2849,12 @@ var jQueryShim = require('./jQueryShim');
     hubConnection.fn.init.prototype = hubConnection.fn;
 
     $.hubConnection = hubConnection;
-})(jQueryShim, window);
+})(jQueryShim);
 /* jquery.signalR.version.js */
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 
-/*global window:false */
 /// <reference path="jquery.signalR.core.js" />
 (function ($, undefined) {
     $.signalR.version = "2.2.1";
