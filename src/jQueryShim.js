@@ -50,38 +50,11 @@ const jqueryFunction = function(subject) {
   };
 };
 
-const ajax = function(options) {
-  const request = new XMLHttpRequest();
-  request.onreadystatechange = () => {
-    if (request.readyState !== 4) {
-      return;
-    }
-
-    if (request.status === 200 && !request._hasError) {
-      options.success && options.success(JSON.parse(request.responseText));
-    } else {
-      options.error && options.error(request);
-    }
-  };
-
-  request.open(options.type, options.url);
-  request.setRequestHeader('content-type', options.contentType);
-
-  request.send(options.data.data && `data=${options.data.data}`);
-
-  return {
-    abort: function(reason) {
-      return request.abort(reason);
-    }
-  };
-};
-
 module.exports = jQueryDeferred.extend(
   jqueryFunction,
   jQueryDeferred,
   {
   defaultAjaxHeaders: null,
-  ajax: ajax,
   inArray: (arr, item) => arr.indexOf(item) !== -1,
   trim: str => str && str.trim(),
   isEmptyObject: obj => !obj || Object.keys(obj).length === 0,

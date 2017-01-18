@@ -1,6 +1,9 @@
 'use strict';
 
+module.exports = (function (ajax) {
+
 const jQueryShim = require('./jQueryShim');
+jQueryShim.ajax = ajax;
 
 /* jquery.signalR.core.js */
 /*!
@@ -2191,5 +2194,9 @@ const jQueryShim = require('./jQueryShim');
     $.signalR.version = "2.2.1";
 }(jQueryShim));
 
-export const hubConnection = jQueryShim.hubConnection;
-export const signalR = jQueryShim.signalR;
+return {
+  hubConnection: jQueryShim.hubConnection,
+  signalR: jQueryShim.signalR
+}
+
+});

@@ -12,4 +12,33 @@ It also removes the `foreverFrame` transport, as it's useless outside the browse
 
 The `serverSendEvents` and `webSockets` transports have been stripped out because I didn't need them, but could definitely be implemented with a PR.
 
-`longPolling` and any other AJAX is implemented with [request](https://www.npmjs.com/package/request).
+For maximum flexibility, `longPolling` and any other AJAX will use a method provided by the user, here's a recommended implementation using [request](https://www.npmjs.com/package/request):
+
+```javascript
+var request = require('request');
+
+var ajax = function(options) {
+  request({
+    url: options.url,
+    method: options.type,
+    headers: {
+      'content-type': options.contentType || 'application/text'
+    },
+    body: options.data && Object.keys(options.data).map((key) => key + '=' + encodeURIComponent(options.data[key])).join('&'),
+    json: options.dataType == 'json',
+    timeout: options.timeout || 30000
+  }, function (error, response, body) {
+    if (error !== null || response.statusCode >= 400) {
+      if (options.error) {
+        options.error({});
+      }
+    } else {
+      if (options.success) {
+        options.success(body);
+      }
+    }
+  });
+}
+
+var signalr = require('signalr-node')(ajax);
+```
