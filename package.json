@@ -1,12 +1,12 @@
 {
   "author": {
-    "name": "Pawel",
-    "url": "https://github.com/dvlp"
+    "name": "Vivi Australia",
+    "url": "https://github.com/vivirnd"
   },
   "bugs": {
-    "url": "https://github.com/DVLP/signalr-no-jquery/issues"
+    "url": "https://github.com/vivirnd/signalr-node/issues"
   },
-  "description": "Javascript SignalR client without jQuery dependency",
+  "description": "A fork of signalr which works in Node, instead of the browser.",
   "dependencies": {
     "jquery-deferred": "0.3.1"
   },
@@ -16,7 +16,7 @@
     "babel-eslint": "*",
     "babel-preset-env": "^1.1.6"
   },
-  "homepage": "https://github.com/DVLP/signalr-no-jquery",
+  "homepage": "https://github.com/vivirnd/signalr-node",
   "keywords": [
     "signalr"
   ],
@@ -28,14 +28,14 @@
     }
   ],
   "main": "build/signalR.js",
-  "name": "signalr-no-jquery",
+  "name": "signalr-node",
   "readme": "README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DVLP/signalr-no-jquery.git"
+    "url": "git+https://github.com/vivirnd/signalr-node.git"
   },
   "scripts": {
     "build": "babel src --out-dir build"
   },
-  "version": "0.1.6"
+  "version": "0.2.0"
 }
