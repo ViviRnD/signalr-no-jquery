@@ -1,6 +1,7 @@
 'use strict';
 
 var jQueryDeferred = require('jquery-deferred');
+var jQueryParam = require('jquery-param');
 
 var jqueryFunction = function jqueryFunction(subject) {
   var events = subject.events || {};
@@ -69,6 +70,9 @@ module.exports = jQueryDeferred.extend(jqueryFunction, jQueryDeferred, {
   },
   makeArray: function makeArray(arr) {
     return [].slice.call(arr, 0);
+  },
+  param: function param(obj) {
+    return jQueryParam(obj);
   },
   support: {
     cors: false
