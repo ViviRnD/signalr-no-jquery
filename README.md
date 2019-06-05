@@ -6,11 +6,13 @@ It's based on [signalr-no-jquery](https://github.com/DVLP/signalr-no-jquery) whi
 
 This repo takes it all the way and removes all reference to browser-specific standards.
 
-Specifically, anythign to do with `window`, user-agent detection, or cross-origin consideration has been replaced or stripped out.
+Specifically, anything to do with `window`, user-agent detection, or cross-origin consideration has been replaced or stripped out.
 
 It also removes the `foreverFrame` transport, as it's useless outside the browser.
 
-The `serverSendEvents` and `webSockets` transports have been stripped out because I didn't need them, but could definitely be implemented with a PR.
+The `serverSendEvents` and `webSockets` transports have been implemnted by two dependencies: [EventSource](https://github.com/EventSource/eventsource) for `serverSendEvents` and [ws](https://github.com/websockets/ws) for `webSockets`.
+
+All transports allow the use of a bearer access token by setting this via `connection.accessToken`. The token is then automatically set as an `Authorization` header.
 
 For maximum flexibility, `longPolling` and any other AJAX will use a method provided by the user, here's a recommended implementation using [request](https://www.npmjs.com/package/request):
 
