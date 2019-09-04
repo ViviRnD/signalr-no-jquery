@@ -1731,6 +1731,10 @@ jQueryShim.ajax = ajax;
 					}
 				};
 
+				connection.socket.onerror = function (error) {
+					$(connection).triggerHandler(events.onError, [error]);
+				}
+
 				connection.socket.onclose = function (event) {
 					var error;
 
