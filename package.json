@@ -1,25 +1,24 @@
 {
   "author": {
-    "name": "Vivi Australia",
-    "url": "https://github.com/vivirnd"
+    "name": "Vivi",
+    "url": "https://github.com/viviedu"
   },
   "bugs": {
-    "url": "https://github.com/vivirnd/signalr-node/issues"
+    "url": "https://github.com/viviedu/signalr-node/issues"
   },
   "description": "A fork of signalr which works in Node, instead of the browser.",
   "dependencies": {
-    "eventsource": "1.0.7",
-    "jquery-deferred": "0.3.1",
-    "jquery-param": "1.0.1",
-    "ws":"7.0.0"
+    "eventsource": "^1.0.7",
+    "jquery-deferred": "^0.3.1",
+    "jquery-param": "^1.0.1",
+    "ws": "^7.0.0"
   },
   "devDependencies": {
-    "babel-cli": "6.18.0",
-    "babel-core": "6.21.0",
-    "babel-eslint": "*",
-    "babel-preset-env": "^1.1.6"
+    "@babel/cli": "^7.14.3",
+    "@babel/core": "^7.14.3",
+    "@babel/preset-env": "^7.14.4"
   },
-  "homepage": "https://github.com/vivirnd/signalr-node",
+  "homepage": "https://github.com/viviedu/signalr-node",
   "keywords": [
     "signalr"
   ],
@@ -35,10 +34,10 @@
   "readme": "README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vivirnd/signalr-node.git"
+    "url": "git+https://github.com/viviedu/signalr-node.git"
   },
   "scripts": {
     "build": "babel src --out-dir build"
   },
-  "version": "0.4.1"
+  "version": "1.0.0"
 }

@@ -1,48 +1,41 @@
 'use strict';
 
-var jQueryDeferred = require('jquery-deferred');
-var jQueryParam = require('jquery-param');
+const jQueryDeferred = require('jquery-deferred');
 
-var jqueryFunction = function jqueryFunction(subject) {
-  var events = subject.events || {};
+const jQueryParam = require('jquery-param');
 
+const jqueryFunction = function (subject) {
+  let events = subject.events || {};
   if (subject && subject === subject.window) return {
     0: subject,
-    load: function load(handler) {
-      return subject.addEventListener('load', handler, false);
-    },
-    bind: function bind(event, handler) {
-      return subject.addEventListener(event, handler, false);
-    },
-    unbind: function unbind(event, handler) {
-      return subject.removeEventListener(event, handler, false);
-    }
+    load: handler => subject.addEventListener('load', handler, false),
+    bind: (event, handler) => subject.addEventListener(event, handler, false),
+    unbind: (event, handler) => subject.removeEventListener(event, handler, false)
   };
-
   return {
     0: subject,
 
     unbind(event, handler) {
-      var handlers = events[event] || [];
+      let handlers = events[event] || [];
 
       if (handler) {
-        var idx = handlers.indexOf(handler);
+        let idx = handlers.indexOf(handler);
         if (idx !== -1) handlers.splice(idx, 1);
       } else handlers = [];
 
       events[event] = handlers;
       subject.events = events;
     },
+
     bind(event, handler) {
-      var current = events[event] || [];
+      let current = events[event] || [];
       events[event] = current.concat(handler);
       subject.events = events;
     },
-    triggerHandler(event, args) {
-      var _this = this;
 
-      var handlers = events[event] || [];
-      handlers.forEach(function (fn) {
+    triggerHandler(event, args) {
+      let handlers = events[event] || [];
+      handlers.forEach(fn => {
         if (args && args[0] && args[0].type === undefined) {
           args = [{
             type: event
@@ -51,29 +44,20 @@ var jqueryFunction = function jqueryFunction(subject) {
           args = args || [];
         }
 
-        fn.apply(_this, args);
+        fn.apply(this, args);
       });
     }
+
   };
 };
 
 module.exports = jQueryDeferred.extend(jqueryFunction, jQueryDeferred, {
   defaultAjaxHeaders: null,
-  inArray: function inArray(arr, item) {
-    return arr.indexOf(item) !== -1;
-  },
-  trim: function trim(str) {
-    return str && str.trim();
-  },
-  isEmptyObject: function isEmptyObject(obj) {
-    return !obj || Object.keys(obj).length === 0;
-  },
-  makeArray: function makeArray(arr) {
-    return [].slice.call(arr, 0);
-  },
-  param: function param(obj) {
-    return jQueryParam(obj);
-  },
+  inArray: (arr, item) => arr.indexOf(item) !== -1,
+  trim: str => str && str.trim(),
+  isEmptyObject: obj => !obj || Object.keys(obj).length === 0,
+  makeArray: arr => [].slice.call(arr, 0),
+  param: obj => jQueryParam(obj),
   support: {
     cors: false
   }
