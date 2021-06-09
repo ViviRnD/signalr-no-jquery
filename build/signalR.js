@@ -1556,7 +1556,8 @@ module.exports = function (ajax) {
             opened = false,
             that = this,
             reconnecting = !onSuccess,
-            $connection = $(connection);
+            $connection = $(connection),
+            config = connection._.config;
 
         if (!WebSocket) {
           onFailed();
@@ -1573,6 +1574,7 @@ module.exports = function (ajax) {
           url += transportLogic.getUrl(connection, this.name, reconnecting);
           connection.log("Connecting to websocket endpoint '" + url + "'.");
           connection.socket = new WebSocket(url, {
+            agent: config.agent,
             headers: connection.accessToken ? {
               "Authorization": "Bearer " + connection.accessToken
             } : {}
