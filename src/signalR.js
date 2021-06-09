@@ -1697,7 +1697,8 @@ jQueryShim.ajax = ajax;
 				opened = false,
 				that = this,
 				reconnecting = !onSuccess,
-				$connection = $(connection);
+				$connection = $(connection),
+				config = connection._.config;
 
 			if (!WebSocket) {
 				onFailed();
@@ -1715,6 +1716,7 @@ jQueryShim.ajax = ajax;
 
 				connection.log("Connecting to websocket endpoint '" + url + "'.");
 				connection.socket = new WebSocket(url, {
+					agent: config.agent,
 					headers: connection.accessToken ? { "Authorization": "Bearer " + connection.accessToken } : {},
 				});
 
